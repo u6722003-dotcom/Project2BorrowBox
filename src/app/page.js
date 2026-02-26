@@ -17,7 +17,7 @@ export default function Dashboard() {
   if (!mounted) return null;
 
   const user = {
-    name: "Andrei",
+    name: "Nay Min Khant",
     credits: 50,
   };
 
