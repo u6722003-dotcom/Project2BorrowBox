@@ -6,15 +6,13 @@ import { Container, TextField, Button, Typography, Box, Paper, Alert, CircularPr
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  // Fixes the Red Hydration Error screen
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,20 +24,16 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success) {
-        // CLEANUP: We trim the input email to prevent "extra character" login failures
         const inputEmail = email.trim().toLowerCase();
-        
-        const userExists = data.data.find(u => u.email.trim().toLowerCase() === inputEmail);
+        // It checks the clean email and ignores the "Student" requirement
+        const userExists = data.data.find(u => u.email && u.email.trim().toLowerCase() === inputEmail);
 
         if (userExists) {
-          // Success: Save user and move to dashboard
           localStorage.setItem('borrowbox_user', JSON.stringify(userExists));
           router.push('/');
         } else {
-          setError('Student email not found. Please sign up first.');
+          setError('Account not found. Please register first.');
         }
-      } else {
-        setError('Could not connect to database.');
       }
     } catch (err) {
       setError('System error. Please try again later.');
@@ -48,7 +42,6 @@ export default function LoginPage() {
     }
   };
 
-  // Prevent the red screen on first load
   if (!mounted) return null;
 
   return (
@@ -58,40 +51,20 @@ export default function LoginPage() {
           <Typography variant="h4" gutterBottom color="primary" sx={{ fontWeight: 'bold' }}>
             BorrowBox
           </Typography>
-          <Typography variant="body1" sx={{ mb: 3 }}>Login to Campus Hub</Typography>
+          <Typography variant="body1" sx={{ mb: 3 }}>Login to your account</Typography>
           
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <form onSubmit={handleLogin}>
-            <TextField
-              fullWidth
-              label="Student Email"
-              variant="outlined"
-              margin="normal"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <TextField fullWidth label="Email Address" type="email" margin="normal" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <TextField fullWidth label="Password" type="password" margin="normal" value={password} onChange={(e) => setPassword(e.target.value)} required />
             
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              type="submit"
-              disabled={loading}
-              sx={{ mt: 3, py: 1.5, textTransform: 'none', fontSize: '1.1rem' }}
-            >
+            <Button fullWidth variant="contained" color="primary" type="submit" disabled={loading} sx={{ mt: 3, py: 1.5 }}>
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
             </Button>
           </form>
           
-          <Button 
-            fullWidth
-            sx={{ mt: 2, textTransform: 'none' }} 
-            onClick={() => router.push('/register')}
-            disabled={loading}
-          >
+          <Button fullWidth sx={{ mt: 2 }} onClick={() => router.push('/register')} disabled={loading}>
             Don't have an account? Sign Up
           </Button>
         </Paper>
