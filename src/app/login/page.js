@@ -11,16 +11,24 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const res = await fetch(`/api/users`);
-    const data = await res.json();
+    try {
+      const res = await fetch(`/api/users`);
+      const data = await res.json();
 
-    // Simple check: does this email exist in our MongoDB User collection?
-    const userExists = data.data.find(u => u.email === email);
+      // Find the user in the MongoDB results
+      const userExists = data.data.find(u => u.email === email);
 
-    if (data.success && userExists) {
-      router.push('/');
-    } else {
-      setError('Student email not found. Please sign up first.');
+      if (data.success && userExists) {
+        // SAVE the user object to localStorage so the Dashboard can read it
+        localStorage.setItem('borrowbox_user', JSON.stringify(userExists));
+        
+        // Redirect to Dashboard
+        router.push('/');
+      } else {
+        setError('Student email not found. Please sign up first.');
+      }
+    } catch (err) {
+      setError('System error. Please try again later.');
     }
   };
 
