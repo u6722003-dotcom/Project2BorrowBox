@@ -19,3 +19,5 @@ This project implements the following three entities:
 2. **Item:** Handles the catalog of items available for lending.
 3. **Loan:** Handles the tracking of borrow requests and return status.
 
+<img width="2559" height="1331" alt="image" src="https://github.com/user-attachments/assets/3fc7d5ea-c1ca-4c97-abd6-cb4c90544a31" />
+<img width="2542" height="1339" alt="image" src="https://github.com/user-attachments/assets/8bb030dc-b88d-4377-802a-696fb1fd8dcd" />
