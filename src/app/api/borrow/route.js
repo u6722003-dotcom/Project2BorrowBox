@@ -4,14 +4,35 @@ import User from "@/models/User";
 export async function POST(req) {
   try {
     await dbConnect();
-    const { borrowerId, lenderId } = await req.json();
+    let { borrowerId, lenderId } = await req.json();
 
-    // This fulfills Andrei's request: Deduct from borrower, add to lender
-    await User.findByIdAndUpdate(borrowerId, { $inc: { credits: -10 } });
-    await User.findByIdAndUpdate(lenderId, { $inc: { credits: 10 } });
+    console.log("Processing Borrow - Borrower:", borrowerId, "Lender:", lenderId);
 
-    return Response.json({ success: true, message: "10 Credits transferred!" });
+    if (!borrowerId || !lenderId) {
+      return Response.json({ success: false, error: "IDs missing" }, { status: 400 });
+    }
+
+    // Clean any accidental spaces or characters
+    const bId = borrowerId.trim();
+    const lId = lenderId.trim();
+
+    // 1. Deduct from Borrower
+    // { $set: { credits: ... } } fallback ensures the field exists
+    await User.findByIdAndUpdate(bId, 
+      { $inc: { credits: -10 } }, 
+      { new: true, upsert: true }
+    );
+
+    // 2. Add to Lender
+    await User.findByIdAndUpdate(lId, 
+      { $inc: { credits: 10 } }, 
+      { new: true, upsert: true }
+    );
+
+    console.log("MongoDB Update Sent successfully");
+    return Response.json({ success: true });
   } catch (error) {
-    return Response.json({ success: false, error: error.message });
+    console.error("Borrow API Error:", error.message);
+    return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 }
