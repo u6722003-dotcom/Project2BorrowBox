@@ -1,38 +1,33 @@
 import { dbConnect } from "@/lib/mongodb";
 import User from "@/models/User";
-
+import Item from "@/models/Item"; // <-- ADDED THIS to talk to the Items database
+ 
 export async function POST(req) {
   try {
     await dbConnect();
-    let { borrowerId, lenderId } = await req.json();
-
-    console.log("Processing Borrow - Borrower:", borrowerId, "Lender:", lenderId);
-
+    // Added itemId so the database knows what to delete
+    let { borrowerId, lenderId, itemId } = await req.json();
+ 
     if (!borrowerId || !lenderId) {
       return Response.json({ success: false, error: "IDs missing" }, { status: 400 });
     }
-
-    // Clean any accidental spaces or characters
+ 
     const bId = borrowerId.trim();
     const lId = lenderId.trim();
-
+ 
     // 1. Deduct from Borrower
-    // { $set: { credits: ... } } fallback ensures the field exists
-    await User.findByIdAndUpdate(bId, 
-      { $inc: { credits: -10 } }, 
-      { new: true, upsert: true }
-    );
-
+    await User.findByIdAndUpdate(bId, { $inc: { credits: -10 } }, { new: true, upsert: true });
+ 
     // 2. Add to Lender
-    await User.findByIdAndUpdate(lId, 
-      { $inc: { credits: 10 } }, 
-      { new: true, upsert: true }
-    );
-
-    console.log("MongoDB Update Sent successfully");
-    return Response.json({ success: true });
+    await User.findByIdAndUpdate(lId, { $inc: { credits: 10 } }, { new: true, upsert: true });
+ 
+    // 3. NEW: Delete the item so it disappears from the screen
+    if (itemId) {
+      await Item.findByIdAndDelete(itemId);
+    }
+ 
+    return Response.json({ success: true, message: "Credits exchanged and item removed!" });
   } catch (error) {
-    console.error("Borrow API Error:", error.message);
     return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 }
